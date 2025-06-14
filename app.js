@@ -11,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // ROUTES
+app.use('/api/items', require('./routes/item.routes'));
 
 // CONNECT TO MONGODB AND START SERVER
 mongoose
