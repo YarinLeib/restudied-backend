@@ -1,6 +1,6 @@
 const express = require('express');
 const Report = require('../models/Report.model');
-const { isAuthenticated } = require('../middlewares/auth.middleware');
+const { isAuthenticated } = require('../middleware/jwt.middleware');
 const router = express.Router();
 
 // POST /api/reports

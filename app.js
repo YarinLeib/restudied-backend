@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
+const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
+
 const app = express();
 const PORT = process.env.PORT || 5005;
 
@@ -12,6 +14,17 @@ app.use(express.json());
 
 // ROUTES
 app.use('/api/items', require('./routes/item.routes'));
+app.use('/api/users', require('./routes/user.routes'));
+app.use('/api/reviews', require('./routes/review.routes'));
+app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/messages', require('./routes/messages.routes'));
+app.use('/api/requests', require('./routes/request.routes'));
+app.use('/api/reports', require('./routes/report.routes'));
+app.use('/uploads', express.static('uploads'));
+app.use('/api/upload', require('./routes/upload.routes'));
+// Error handling middleware
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 // CONNECT TO MONGODB AND START SERVER
 mongoose
