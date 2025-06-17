@@ -23,7 +23,7 @@ const itemSchema = new mongoose.Schema(
     },
     itemCondition: {
       type: String,
-      enum: ['New', 'Like New', 'Used without marks', 'Used with marks', 'Poor'],
+      enum: ['New', 'Like New', 'Used'],
       required: true,
     },
     itemLanguage: {

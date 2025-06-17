@@ -8,7 +8,8 @@ const saltRounds = 10;
 
 // POST /api/auth/signup
 router.post('/signup', async (req, res) => {
-  const { email, password, name, profileImage } = req.body;
+  console.log('BODY:', req.body);
+  const { email, password, name, username, profileImage } = req.body;
 
   if (!email || !password || !name || !username) {
     return res.status(400).json({ message: 'Provide email, password, name, and username' });
