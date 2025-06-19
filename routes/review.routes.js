@@ -9,13 +9,22 @@ const router = express.Router();
 router.post('/', isAuthenticated, async (req, res) => {
   const { reviewee, rating, comment } = req.body;
   const reviewer = req.payload._id;
+
+  if (!reviewee || typeof rating !== 'number' || comment === undefined) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+
+  if (reviewer.toString() === reviewee.toString()) {
+    return res.status(400).json({ message: 'You cannot review yourself.' });
+  }
+
+  if (rating < 1 || rating > 5) {
+    return res.status(400).json({ message: 'Rating must be between 1 and 5.' });
+  }
+
   const existing = await Review.findOne({ reviewer, reviewee });
   if (existing) {
     return res.status(400).json({ message: 'You already reviewed this user.' });
-  }
-
-  if (!reviewee || !rating || !comment) {
-    return res.status(400).json({ message: 'All fields are required.' });
   }
 
   try {
