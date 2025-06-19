@@ -1,8 +1,8 @@
 const express = require('express');
 const Request = require('../models/Request.model');
 const { isAuthenticated } = require('../middleware/jwt.middleware');
-const User = require('../models/User.model');
 const router = express.Router();
+const Item = require('../models/Item.model');
 
 // POST /api/requests
 router.post('/', isAuthenticated, async (req, res) => {
@@ -12,7 +12,17 @@ router.post('/', isAuthenticated, async (req, res) => {
   if (!requestee || !itemId) {
     return res.status(400).json({ message: 'Requestee ID and Item ID are required.' });
   }
+  if (req.payload._id === requestee) {
+    return res.status(400).json({ message: 'You cannot request your own item.' });
+  }
+  const item = await Item.findById(itemId);
+  if (!item) {
+    return res.status(404).json({ message: 'Item not found.' });
+  }
 
+  if (item.owner.toString() !== requestee) {
+    return res.status(400).json({ message: 'This item does not belong to the user you are requesting from.' });
+  }
   try {
     const newRequest = await Request.create({
       requester: requesterId,
@@ -61,10 +71,16 @@ router.delete('/:requestId', isAuthenticated, async (req, res) => {
   const { requestId } = req.params;
 
   try {
-    const request = await Request.findByIdAndDelete(requestId);
+    const request = await Request.findById(requestId);
     if (!request) {
       return res.status(404).json({ message: 'Request not found.' });
     }
+
+    if (request.requestee.toString() === req.payload._id) {
+      return res.status(403).json({ message: 'Only the requestee can delete the request.' });
+    }
+
+    await Request.findByIdAndDelete(requestId);
     res.status(200).json({ message: 'Request deleted successfully.' });
   } catch (error) {
     console.error('Error deleting request:', error);
