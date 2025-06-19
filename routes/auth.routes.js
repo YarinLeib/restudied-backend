@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User.model');
 const { isAuthenticated } = require('../middleware/jwt.middleware');
+const isAdmin = require('../middleware/isAdmin');
 const saltRounds = 10;
 
 // POST /api/auth/signup
@@ -78,7 +79,13 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const payload = { _id: user._id, email: user.email, name: user.name, username: user.username };
+    const payload = {
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      username: user.username,
+      isAdmin: user.isAdmin,
+    };
     const authToken = jwt.sign(payload, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '6h' });
 
     res.status(200).json({ authToken, user: payload });

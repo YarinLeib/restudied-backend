@@ -11,6 +11,10 @@ router.post('/', isAuthenticated, async (req, res) => {
   if (!receiver || !content || !itemId) {
     return res.status(400).json({ message: 'All fields are required.' });
   }
+  if (req.payload._id === receiver) {
+    return res.status(400).json({ message: 'Cannot send message to yourself.' });
+  }
+
   try {
     const newMessage = await Message.create({
       sender: req.payload._id,

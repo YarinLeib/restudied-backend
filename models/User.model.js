@@ -8,6 +8,7 @@ const userSchema = new Schema(
     password: { type: String, required: true },
     name: { type: String, required: true },
     profileImage: { type: String, default: '' },
+    isAdmin: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
