@@ -4,13 +4,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User.model');
 const { isAuthenticated } = require('../middleware/jwt.middleware');
-const isAdmin = require('../middleware/isAdmin');
+const upload = require('../middleware/cloudinary.middleware');
 const saltRounds = 10;
 
 // POST /api/auth/signup
-router.post('/signup', async (req, res) => {
+router.post('/signup', upload.single('profileImage'), async (req, res) => {
   console.log('BODY:', req.body);
-  const { email, password, name, username, profileImage } = req.body;
+  const { email, password, name, username } = req.body;
+  const profileImage = req.file?.path;
 
   if (!email || !password || !name || !username) {
     return res.status(400).json({ message: 'Provide email, password, name, and username' });
@@ -114,15 +115,32 @@ router.get('/profile', isAuthenticated, async (req, res) => {
   }
 });
 // PUT /api/auth/profile
-router.put('/profile', isAuthenticated, async (req, res) => {
-  const { name, username, profileImage } = req.body;
+router.put('/profile', isAuthenticated, upload.single('profileImage'), async (req, res) => {
+  const { name, username, password } = req.body;
+  const profileImage = req.file?.path;
 
   try {
-    const updatedUser = await User.findByIdAndUpdate(
-      req.payload._id,
-      { name, username, profileImage },
-      { new: true, runValidators: true }
-    ).select('-password');
+    const updates = {};
+    if (name) updates.name = name;
+    if (username) updates.username = username;
+    if (profileImage) updates.profileImage = profileImage;
+
+    if (password) {
+      const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({
+          message:
+            'Password must have at least 6 characters and contain at least one number, one lowercase and one uppercase letter.',
+        });
+      }
+      const salt = bcrypt.genSaltSync(10);
+      updates.password = bcrypt.hashSync(password, salt);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.payload._id, updates, {
+      new: true,
+      runValidators: true,
+    }).select('-password');
 
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });

@@ -20,8 +20,7 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/messages', require('./routes/messages.routes'));
 app.use('/api/requests', require('./routes/request.routes'));
 app.use('/api/reports', require('./routes/report.routes'));
-app.use('/uploads', express.static('uploads'));
-app.use('/api/upload', require('./routes/upload.routes'));
+
 // Error handling middleware
 app.use(notFoundHandler);
 app.use(errorHandler);

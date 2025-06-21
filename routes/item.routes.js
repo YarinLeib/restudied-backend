@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Item = require('../models/Item.model');
 const { isAuthenticated } = require('../middleware/jwt.middleware');
+const upload = require('../middleware/cloudinary.middleware');
 
 // POST /api/items
-router.post('/', isAuthenticated, async (req, res) => {
-  const { title, itemDescription, itemLocation, itemCategory, itemImage, itemCondition, itemLanguage } = req.body;
+router.post('/', isAuthenticated, upload.single('itemImage'), async (req, res) => {
+  const { title, itemDescription, itemLocation, itemCategory, itemCondition, itemLanguage } = req.body;
+  const itemImage = req.file?.path;
   const ownerId = req.payload._id;
 
   try {
@@ -107,9 +109,10 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update item by ID
-router.put('/:id', isAuthenticated, async (req, res) => {
+router.put('/:id', isAuthenticated, upload.single('itemImage'), async (req, res) => {
   const { id } = req.params;
-  const { title, itemDescription, itemLocation, itemCategory, itemImage, itemCondition, itemLanguage } = req.body;
+  const { title, itemDescription, itemLocation, itemCategory, itemCondition, itemLanguage } = req.body;
+  const itemImage = req.file?.path;
 
   try {
     const item = await Item.findById(id);
@@ -126,7 +129,7 @@ router.put('/:id', isAuthenticated, async (req, res) => {
         itemDescription,
         itemLocation,
         itemCategory,
-        itemImage,
+        itemImage: itemImage || item.itemImage,
         itemCondition,
         itemLanguage,
       },
