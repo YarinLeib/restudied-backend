@@ -14,7 +14,7 @@ router.post('/signup', upload.single('profileImage'), async (req, res) => {
   const profileImage = req.file?.path;
 
   if (!email || !password || !name || !username) {
-    return res.status(400).json({ message: 'Provide email, password, name, and username' });
+    return res.status(400).json({ message: 'Provide username, name, email, and password' });
   }
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
