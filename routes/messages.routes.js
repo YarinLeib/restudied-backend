@@ -8,9 +8,13 @@ const router = express.Router();
 router.post('/', isAuthenticated, async (req, res) => {
   const { receiver, content, itemId } = req.body;
 
+  console.log('REQUEST BODY:', req.body);
+  console.log('SENDER (from token):', req.payload._id);
+
   if (!receiver || !content || !itemId) {
     return res.status(400).json({ message: 'All fields are required.' });
   }
+
   if (req.payload._id === receiver) {
     return res.status(400).json({ message: 'Cannot send message to yourself.' });
   }
@@ -23,10 +27,11 @@ router.post('/', isAuthenticated, async (req, res) => {
       itemId,
     });
 
+    console.log('Created Message:', newMessage);
     res.status(201).json(newMessage);
   } catch (error) {
     console.error('Error creating message:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal Server Error. Check the server console' });
   }
 });
 

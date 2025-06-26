@@ -70,14 +70,14 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const isPasswordValid = bcrypt.compareSync(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid Server Error' });
     }
 
     const payload = {
@@ -85,6 +85,7 @@ router.post('/login', async (req, res) => {
       email: user.email,
       name: user.name,
       username: user.username,
+      profileImage: user.profileImage,
       isAdmin: user.isAdmin,
     };
     const authToken = jwt.sign(payload, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '6h' });
@@ -98,8 +99,8 @@ router.post('/login', async (req, res) => {
 
 // GET /api/auth/verify
 router.get('/verify', isAuthenticated, (req, res) => {
-  const { _id, email, name, username } = req.payload;
-  res.status(200).json({ user: { _id, email, name, username } });
+  const { _id, email, name, username, profileImage } = req.payload;
+  res.status(200).json({ user: { _id, email, name, username, profileImage } });
 });
 // GET /api/auth/profile
 router.get('/profile', isAuthenticated, async (req, res) => {
