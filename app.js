@@ -9,6 +9,10 @@ const { notFoundHandler, errorHandler } = require("./middleware/errorHandler");
 const app = express();
 const PORT = process.env.PORT || 5005;
 
+app.get("/", (req, res) => {
+  res.send("ReStudied backend is up and running.");
+});
+
 // MIDDLEWARE
 app.use(cors());
 app.use(express.json());
