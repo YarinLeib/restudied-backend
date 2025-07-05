@@ -75,7 +75,16 @@ router.put("/profile", isAuthenticated, async (req, res) => {
     }
 
     if (name) user.name = name;
-    if (email) user.email = email;
+    if (email) {
+      const existingEmailUser = await User.findOne({
+        email,
+        _id: { $ne: req.payload._id },
+      });
+      if (existingEmailUser) {
+        return res.status(400).json({ message: "Email already in use." });
+      }
+      user.email = email;
+    }
     if (profileImage) user.profileImage = profileImage;
 
     if (newPassword) {
