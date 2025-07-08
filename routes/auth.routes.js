@@ -51,19 +51,25 @@ router.post("/signup", upload.single("profileImage"), async (req, res) => {
     const salt = bcrypt.genSaltSync(saltRounds);
     const hashedPassword = bcrypt.hashSync(password, salt);
 
-    const createdUser = await User.create({
+    const userData = {
       email,
       password: hashedPassword,
       name,
       username,
       usernameLower: lowercaseUsername,
-      profileImage: profileImage || "",
-    });
+    };
 
-    const { _id } = createdUser;
+   
+    if (profileImage) {
+      userData.profileImage = profileImage;
+    }
+
+    const createdUser = await User.create(userData);
+
+    const { _id, email: userEmail, name: userName, username: userUsername, profileImage: userProfileImage } = createdUser;
     res
       .status(201)
-      .json({ user: { _id, email, name, username, profileImage } });
+      .json({ user: { _id, email: userEmail, name: userName, username: userUsername, profileImage: userProfileImage } });
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -138,7 +144,16 @@ router.put(
     const { name, username, password } = req.body;
     const profileImage = req.file?.path;
 
+    console.log("Profile update - req.file:", req.file);
+    console.log("Profile update - profileImage:", profileImage);
+
     try {
+      // Get the current user to preserve existing profileImage if no new one is uploaded
+      const currentUser = await User.findById(req.payload._id);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       const updates = {};
       if (name) updates.name = name;
       if (typeof username === "string") {
@@ -157,7 +172,12 @@ router.put(
         updates.username = trimmedUsername;
         updates.usernameLower = lowercaseUsername;
       }
-      if (profileImage) updates.profileImage = profileImage;
+      // Handle profileImage exactly like items - keep existing if no new one uploaded
+      if (profileImage) {
+        updates.profileImage = profileImage;
+      } else if (currentUser.profileImage) {
+        updates.profileImage = currentUser.profileImage;
+      }
 
       if (password) {
         const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
@@ -184,6 +204,7 @@ router.put(
         return res.status(404).json({ message: "User not found" });
       }
 
+      console.log("Updated user profileImage:", updatedUser.profileImage);
       res.status(200).json(updatedUser);
     } catch (err) {
       console.error("Profile update error:", err);
