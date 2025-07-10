@@ -23,6 +23,7 @@ app.use("/api/users", require("./routes/user.routes"));
 app.use("/api/reviews", require("./routes/review.routes"));
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/messages", require("./routes/messages.routes"));
+app.use("/api/reports", require("./routes/report.routes"));
 
 // Error handling middleware
 app.use(notFoundHandler);
