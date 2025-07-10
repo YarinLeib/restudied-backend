@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const Report = require("../models/Report.model");
-const Item = require("../models/Item.model");
 const { isAuthenticated } = require("../middleware/jwt.middleware");
 const isAdmin = require("../middleware/isAdmin");
 
-// POST /api/reports — anyone authenticated can report
+// POST /api/reports — anyone authenticated can report a user
 router.post("/", isAuthenticated, async (req, res) => {
   const { reportedUser, reason, message } = req.body;
 
@@ -18,6 +17,17 @@ router.post("/", isAuthenticated, async (req, res) => {
   }
 
   try {
+    const existingReport = await Report.findOne({
+      reporter: req.payload._id,
+      reportedUser,
+    });
+
+    if (existingReport) {
+      return res.status(400).json({
+        message: "You have already reported this user.",
+      });
+    }
+
     const report = await Report.create({
       reporter: req.payload._id,
       reportedUser,
@@ -32,13 +42,26 @@ router.post("/", isAuthenticated, async (req, res) => {
   }
 });
 
-// Admin routes
+// GET /api/reports — admin only, all reports
+router.get("/", isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const reports = await Report.find()
+      .populate("reporter", "username")
+      .populate("reportedUser", "username");
+
+    res.status(200).json(reports);
+  } catch (error) {
+    console.error("Error fetching reports:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// GET /api/reports/:reportId — admin only, single report
 router.get("/:reportId", isAuthenticated, isAdmin, async (req, res) => {
   try {
     const report = await Report.findById(req.params.reportId)
       .populate("reporter", "username")
-      .populate("reportedUser", "username")
-      .populate("itemId");
+      .populate("reportedUser", "username");
 
     if (!report) return res.status(404).json({ message: "Report not found." });
 
@@ -49,11 +72,13 @@ router.get("/:reportId", isAuthenticated, isAdmin, async (req, res) => {
   }
 });
 
+// GET /api/reports/user/:userId — admin only, all reports for a user
 router.get("/user/:userId", isAuthenticated, isAdmin, async (req, res) => {
   try {
     const reports = await Report.find({ reportedUser: req.params.userId })
       .populate("reporter", "username")
-      .populate("itemId");
+      .populate("reportedUser", "username");
+
     res.status(200).json(reports);
   } catch (error) {
     console.error("Error fetching user reports:", error);
@@ -61,18 +86,7 @@ router.get("/user/:userId", isAuthenticated, isAdmin, async (req, res) => {
   }
 });
 
-router.get("/item/:itemId", isAuthenticated, isAdmin, async (req, res) => {
-  try {
-    const reports = await Report.find({ itemId: req.params.itemId })
-      .populate("reporter", "username")
-      .populate("reportedUser", "username");
-    res.status(200).json(reports);
-  } catch (error) {
-    console.error("Error fetching item reports:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
+// DELETE /api/reports/:reportId — admin only, delete a report
 router.delete("/:reportId", isAuthenticated, isAdmin, async (req, res) => {
   try {
     const deleted = await Report.findByIdAndDelete(req.params.reportId);

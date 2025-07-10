@@ -5,7 +5,6 @@ const reportSchema = new Schema(
   {
     reporter: { type: Schema.Types.ObjectId, ref: "User", required: true },
     reportedUser: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    itemId: { type: Schema.Types.ObjectId, ref: "Item" },
     reason: {
       type: String,
       enum: ["Inappropriate Content", "Spam", "Harassment", "Other"],
@@ -21,5 +20,5 @@ const reportSchema = new Schema(
     timestamps: true,
   }
 );
-
+reportSchema.index({ reporter: 1, reportedUser: 1 }, { unique: true });
 module.exports = model("Report", reportSchema);
