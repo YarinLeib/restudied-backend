@@ -59,17 +59,28 @@ router.post("/signup", upload.single("profileImage"), async (req, res) => {
       usernameLower: lowercaseUsername,
     };
 
-   
     if (profileImage) {
       userData.profileImage = profileImage;
     }
 
     const createdUser = await User.create(userData);
 
-    const { _id, email: userEmail, name: userName, username: userUsername, profileImage: userProfileImage } = createdUser;
-    res
-      .status(201)
-      .json({ user: { _id, email: userEmail, name: userName, username: userUsername, profileImage: userProfileImage } });
+    const {
+      _id,
+      email: userEmail,
+      name: userName,
+      username: userUsername,
+      profileImage: userProfileImage,
+    } = createdUser;
+    res.status(201).json({
+      user: {
+        _id,
+        email: userEmail,
+        name: userName,
+        username: userUsername,
+        profileImage: userProfileImage,
+      },
+    });
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -119,8 +130,18 @@ router.post("/login", async (req, res) => {
 
 // GET /api/auth/verify
 router.get("/verify", isAuthenticated, (req, res) => {
-  const { _id, email, name, username, profileImage } = req.payload;
-  res.status(200).json({ user: { _id, email, name, username, profileImage } });
+  const { _id, email, name, username, profileImage, isAdmin } = req.payload;
+
+  res.status(200).json({
+    user: {
+      _id,
+      email,
+      name,
+      username,
+      profileImage,
+      isAdmin,
+    },
+  });
 });
 // GET /api/auth/profile
 router.get("/profile", isAuthenticated, async (req, res) => {
